@@ -1,2 +1,3 @@
 
-let a = 5;
+describe('thing', () => {
+});
