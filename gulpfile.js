@@ -9,7 +9,7 @@ gulp.task('default', function() {
 function buildScript(inFile, outFile) {
   return browserify(inFile)
     .transform('babelify', {
-      presets: ['es2015', 'stage-2'],
+      presets: ['es2015', 'stage-0'],
       plugins: ['transform-react-jsx']
     })
     .bundle()
