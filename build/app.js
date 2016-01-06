@@ -647,7 +647,16 @@ var _redux = require('redux');
 
 var view = function view(_ref) {
   var value = _ref.value;
-  return React.createElement('div', { value: value });
+  var onClick = _ref.onClick;
+  return React.createElement(
+    'div',
+    { value: value, onClick: onClick },
+    React.createElement(
+      'p',
+      null,
+      'Click me'
+    )
+  );
 };
 
 },{"redux":3}]},{},[11]);
