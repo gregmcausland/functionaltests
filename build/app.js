@@ -643,20 +643,325 @@ module.exports = exports["default"];
 },{}],11:[function(require,module,exports){
 'use strict';
 
-var _redux = require('redux');
-
-var view = function view(_ref) {
-  var value = _ref.value;
-  var onClick = _ref.onClick;
-  return React.createElement(
-    'div',
-    { value: value, onClick: onClick },
-    React.createElement(
-      'p',
-      null,
-      'Click me'
-    )
-  );
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var registerModule = exports.registerModule = function registerModule(_ref) {
+  var id = _ref.id;
+  var api = _ref.api;
+  var inject = _ref.inject;
+  return {
+    type: 'REGISTER_MODULE',
+    id: id,
+    api: api,
+    inject: inject
+  };
 };
 
-},{"redux":3}]},{},[11]);
+var deRegisterModule = exports.deRegisterModule = function deRegisterModule(id) {
+  return {
+    type: 'DEREGISTER_MODULE',
+    id: id
+  };
+};
+
+var moduleHasRun = exports.moduleHasRun = function moduleHasRun(id) {
+  return {
+    type: 'MODULE_HAS_RUN',
+    id: id
+  };
+};
+
+},{}],12:[function(require,module,exports){
+'use strict';
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _stvStore = require('../store/stvStore');
+
+var _moduleActions = require('./moduleActions');
+
+var moduleActions = _interopRequireWildcard(_moduleActions);
+
+var _validatedFieldsActions = require('./validatedFieldsActions');
+
+var validatedFieldsActions = _interopRequireWildcard(_validatedFieldsActions);
+
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+
+exports.default = (0, _stvStore.prepareActions)(_extends({}, moduleActions, validatedFieldsActions));
+
+},{"../store/stvStore":19,"./moduleActions":11,"./validatedFieldsActions":13}],13:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var addValidatedField = exports.addValidatedField = function addValidatedField(_ref) {
+  var id = _ref.id;
+  var node = _ref.node;
+  return {
+    type: 'ADD_VALIDATED_FIELD',
+    id: id,
+    node: node
+  };
+};
+
+var updateValidity = exports.updateValidity = function updateValidity(_ref2) {
+  var id = _ref2.id;
+  var isValid = _ref2.isValid;
+  return {
+    type: 'UPDATE_VALIDITY',
+    id: id,
+    isValid: isValid
+  };
+};
+
+},{}],14:[function(require,module,exports){
+'use strict';
+
+require('./modules');
+
+require('./validatedFields');
+
+},{"./modules":15,"./validatedFields":20}],15:[function(require,module,exports){
+'use strict';
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var _stvStore = require('./store/stvStore');
+
+var _preparedActions = require('./actions/preparedActions');
+
+var _preparedActions2 = _interopRequireDefault(_preparedActions);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var moduleHasRun = _preparedActions2.default.moduleHasRun;
+
+var checkForNewDependencies = function checkForNewDependencies() {
+  var modules = _stvStore.stvStore.getState().modules;
+  var modulesThatCanRun = Object.keys(modules).map(function (key) {
+    return modules[key];
+  }).filter(function (module) {
+    return module.api && module.api.ready && !module.hasRun;
+  }).forEach(startModule(modules));
+
+  console.log(_stvStore.stvStore.getState().validatedFields);
+};
+
+var startModule = function startModule(availableModules) {
+  return function (module) {
+    var availableModulesList = Object.keys(availableModules);
+    var moduleCanStart = module.inject.reduce(function (hasAllModules, item) {
+      return hasAllModules && availableModulesList.includes(item);
+    }, true);
+
+    if (moduleCanStart) {
+      moduleHasRun(module.id);
+      var dependenciesToInject = availableModulesList.reduce(function (moduleList, key) {
+        return _extends({}, moduleList, _defineProperty({}, key, availableModules[key].api));
+      }, {});
+
+      module.api.ready(dependenciesToInject);
+    }
+  };
+};
+
+var startModuleAtDOMReady = function startModuleAtDOMReady(availableModules) {
+  return function (module) {
+    var availableModulesList = Object.keys(availableModules);
+    var dependenciesToInject = availableModulesList.reduce(function (moduleList, key) {
+      return _extends({}, moduleList, _defineProperty({}, key, availableModules[key].api));
+    }, {});
+
+    moduleHasRun(module.id);
+    module.api.domReady(dependenciesToInject);
+  };
+};
+
+_stvStore.stvStore.subscribe(checkForNewDependencies);
+
+},{"./actions/preparedActions":12,"./store/stvStore":19}],16:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _redux = require('redux');
+
+var _moduleReducer = require('../reducers/moduleReducer');
+
+var _moduleReducer2 = _interopRequireDefault(_moduleReducer);
+
+var _validatedFieldsReducer = require('../reducers/validatedFieldsReducer');
+
+var _validatedFieldsReducer2 = _interopRequireDefault(_validatedFieldsReducer);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = (0, _redux.combineReducers)({
+  modules: _moduleReducer2.default,
+  validatedFields: _validatedFieldsReducer2.default
+});
+
+},{"../reducers/moduleReducer":17,"../reducers/validatedFieldsReducer":18,"redux":3}],17:[function(require,module,exports){
+'use strict';
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+exports.default = function () {
+  var state = arguments.length <= 0 || arguments[0] === undefined ? {} : arguments[0];
+  var action = arguments[1];
+
+  switch (action.type) {
+    case 'REGISTER_MODULE':
+      if (action.id && action.api) return _extends({}, state, _defineProperty({}, action.id, { id: action.id, api: action.api(), hasRun: false, inject: action.inject || [] }));
+    case 'DEREGISTER_MODULE':
+      if (action.id) return Object.keys(state).filter(function (key) {
+        return key !== action.id;
+      }).reduce(function (newState, key) {
+        return _extends({}, newState, _defineProperty({}, key, state[key]));
+      }, {});
+    case 'MODULE_HAS_RUN':
+      if (action.id) return _extends({}, state, _defineProperty({}, action.id, _extends({}, state[action.id], { hasRun: true })));
+    default:
+      return state;
+  }
+};
+
+},{}],18:[function(require,module,exports){
+'use strict';
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+exports.default = function () {
+  var state = arguments.length <= 0 || arguments[0] === undefined ? [] : arguments[0];
+  var action = arguments[1];
+
+  switch (action.type) {
+    case 'ADD_VALIDATED_FIELD':
+      return [].concat(_toConsumableArray(state), [{ id: action.id, node: action.node, isValid: false }]);
+    case 'UPDATE_VALIDITY':
+      return [].concat(_toConsumableArray(state.filter(function (field) {
+        return field.id !== action.id;
+      })), [_extends({}, state.find(function (field) {
+        return field.id === action.id;
+      }), {
+        isValid: action.isValid
+      })]);
+    default:
+      return state;
+  }
+};
+
+},{}],19:[function(require,module,exports){
+'use strict';
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.prepareActions = exports.dispatch = exports.stvStore = undefined;
+
+var _redux = require('redux');
+
+var _index = require('../reducers/index');
+
+var _index2 = _interopRequireDefault(_index);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var stvStore = exports.stvStore = (0, _redux.createStore)(_index2.default);
+
+var dispatch = exports.dispatch = stvStore.dispatch;
+
+var prepareActions = exports.prepareActions = function prepareActions(actions) {
+  return Object.keys(actions).reduce(function (list, key) {
+    return _extends({}, list, _defineProperty({}, key, function (args) {
+      return dispatch(actions[key](args));
+    }));
+  }, {});
+};
+
+},{"../reducers/index":16,"redux":3}],20:[function(require,module,exports){
+'use strict';
+
+var _stvStore = require('./store/stvStore');
+
+var _preparedActions = require('./actions/preparedActions');
+
+var _preparedActions2 = _interopRequireDefault(_preparedActions);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var registerModule = _preparedActions2.default.registerModule;
+var addValidatedField = _preparedActions2.default.addValidatedField;
+var updateValidity = _preparedActions2.default.updateValidity;
+
+var api = function api() {
+  return { ready: ready };
+};
+
+var requiredAttributes = ['required'];
+
+var ready = function ready() {
+  return Array.from(document.querySelectorAll('[validated-field]')).filter(function (node) {
+    return requiredAttributes.find(function (attribute) {
+      return node.hasAttribute(attribute);
+    });
+  }).forEach(createValidatedField);
+};
+
+var createValidatedField = function createValidatedField(node) {
+  var id = node.id;
+
+  var fieldValidation = getFieldValidation({ id: id, preventDefault: true });
+  addValidatedField({ node: node, id: id });
+  node.addEventListener('keyup', fieldValidation);
+};
+
+var getFieldValidation = function getFieldValidation(_ref) {
+  var id = _ref.id;
+  var preventDefault = _ref.preventDefault;
+  return function (evt) {
+    preventDefault && evt.preventDefault();
+    var field = _stvStore.stvStore.getState().validatedFields.find(function (field) {
+      return field.id === id;
+    });
+
+    var isValid = isFieldValid(field);
+
+    if (isValid !== field.isValid) updateValidity({ id: id, isValid: isValid });
+  };
+};
+
+var isFieldValid = function isFieldValid(field) {
+  return field.node.value.length > 0;
+};
+
+registerModule({ id: 'validatedFields', api: api });
+
+},{"./actions/preparedActions":12,"./store/stvStore":19}]},{},[14]);
