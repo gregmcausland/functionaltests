@@ -8,10 +8,7 @@ gulp.task('default', function() {
 
 function buildScript(inFile, outFile) {
   return browserify(inFile)
-    .transform('babelify', {
-      presets: ['es2015', 'stage-2'],
-      plugins: ['transform-react-jsx']
-    })
+    .transform('babelify')
     .bundle()
     .pipe(fs.createWriteStream(outFile));
 }
