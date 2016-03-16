@@ -5,3 +5,9 @@ export function addTodo(todo) {
     todo
   }
 }
+
+const thing = document.createElement('a')
+
+thing.onclick = (evt) => {
+    
+}
